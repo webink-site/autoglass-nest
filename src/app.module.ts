@@ -5,6 +5,8 @@ import { GlobalsModule } from './globals/globals.module';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { ServiceModule } from './service/service.module';
+import { WrapModule } from './wrap/wrap.module';
+import { GalleryModule } from './gallery/gallery.module';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { ServiceModule } from './service/service.module';
     PrismaModule,
     GlobalsModule,
     ServiceModule,
+    WrapModule,
+    GalleryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

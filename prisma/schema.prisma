@@ -57,6 +57,32 @@ model Variation {
   servicePrice   ServicePrice @relation(fields: [servicePriceId], references: [id], onDelete: Cascade)
 }
 
+model WrapElement {
+  id     Int         @id @default(autoincrement())
+  name   String
+  prices WrapPrice[]
+
+  @@map("wrap_elementsservices")
+}
+
+model WrapPrice {
+  id            Int           @id @default(autoincrement())
+  transportType TransportType
+  price         Int
+  wrapElement   WrapElement?  @relation(fields: [wrapElementId], references: [id], onDelete: Cascade)
+  wrapElementId Int?
+
+  @@unique([wrapElementId, transportType])
+}
+
+model WrapPackage {
+  id         Int    @id @default(autoincrement())
+  name       String
+  elementIds Int[]  @map("element_ids")
+
+  @@map("wrap_packages")
+}
+
 enum TransportType {
   SEDAN // Легковые
   BUSINESS // Бизнес-класс
