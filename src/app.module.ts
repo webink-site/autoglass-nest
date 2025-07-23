@@ -7,6 +7,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ServiceModule } from './service/service.module';
 import { WrapModule } from './wrap/wrap.module';
 import { GalleryModule } from './gallery/gallery.module';
+import { FileModule } from './file/file.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import * as path from 'path';
 
 @Module({
   imports: [
@@ -18,6 +21,11 @@ import { GalleryModule } from './gallery/gallery.module';
     ServiceModule,
     WrapModule,
     GalleryModule,
+    FileModule,
+    ServeStaticModule.forRoot({
+      rootPath: path.join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

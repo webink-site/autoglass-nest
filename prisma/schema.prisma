@@ -84,15 +84,19 @@ model WrapPackage {
 }
 
 model GalleryItem {
-  id       Int     @id @default(autoincrement())
-  alt      String?
-  slug     String
+  id       Int          @id @default(autoincrement())
   imageUrl String
+  fileType EnumFileType @default(IMAGE) @map("file_type")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("gallery")
+}
+
+enum EnumFileType {
+  IMAGE
+  VIDEO
 }
 
 enum TransportType {
