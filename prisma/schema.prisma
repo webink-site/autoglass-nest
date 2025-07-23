@@ -83,6 +83,18 @@ model WrapPackage {
   @@map("wrap_packages")
 }
 
+model GalleryItem {
+  id       Int     @id @default(autoincrement())
+  alt      String?
+  slug     String
+  imageUrl String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("gallery")
+}
+
 enum TransportType {
   SEDAN // Легковые
   BUSINESS // Бизнес-класс
