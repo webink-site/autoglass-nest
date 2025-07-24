@@ -25,22 +25,26 @@ model Globals {
 }
 
 model Service {
-  id              Int            @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   name            String
   description     String
   advantages      String[]
-  longDescription String         @map("long_description")
-  prices          ServicePrice[]
+  longDescription String   @map("long_description")
 
-  // Новые поля для связи с GalleryItem
+  // Отдельные изображения
   cardImageId   Int? @map("card_image_id")
   headerImageId Int? @map("header_image_id")
   videoId       Int? @map("video_id")
 
-  // Связи с GalleryItem
+  prices ServicePrice[]
+
+  // Связи с отдельными изображениями
   cardImage   GalleryItem? @relation("ServiceCardImage", fields: [cardImageId], references: [id])
   headerImage GalleryItem? @relation("ServiceHeaderImage", fields: [headerImageId], references: [id])
   video       GalleryItem? @relation("ServiceVideo", fields: [videoId], references: [id])
+
+  // Галерея изображений
+  galleryItems GalleryItem[] @relation("ServiceGallery")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -96,6 +100,11 @@ model GalleryItem {
   imageUrl String
   fileType EnumFileType @default(IMAGE) @map("file_type")
 
+  // Связь с галереей сервиса
+  serviceId Int?     @map("service_id")
+  service   Service? @relation("ServiceGallery", fields: [serviceId], references: [id], onDelete: Cascade)
+
+  // Обратные связи с отдельными изображениями Service
   serviceCardImages   Service[] @relation("ServiceCardImage")
   serviceHeaderImages Service[] @relation("ServiceHeaderImage")
   serviceVideos       Service[] @relation("ServiceVideo")

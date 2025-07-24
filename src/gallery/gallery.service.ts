@@ -1,49 +1,110 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Express } from 'express';
-import { FileService } from 'src/file/file.service';
-import { GalleryItem } from '@prisma/client';
+import { EnumFileType, GalleryItem } from '@prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
+
 @Injectable()
 export class GalleryService {
-  constructor(
-    private prismaService: PrismaService,
-    private fileService: FileService,
-  ) {}
+  constructor(private prismaService: PrismaService) {}
 
-  async findAll(): Promise<GalleryItem[]> {
-    const gallery = await this.prismaService.galleryItem.findMany();
-    return gallery;
-  }
+  async saveFile(
+    file: Express.Multer.File,
+    fileType: EnumFileType,
+    serviceId?: number,
+  ) {
+    // Создаем папку uploads если не существует
+    const uploadsDir = path.join(process.cwd(), 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
 
-  async createGalleryImage(file: Express.Multer.File) {
-    const filePath = this.fileService.uploadFileToFolder(file, 'gallery');
+    // Генерируем уникальное имя файла
+    const fileName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+    const filePath = path.join(uploadsDir, fileName);
 
-    const image = await this.prismaService.galleryItem.create({
+    // Сохраняем файл
+    fs.writeFileSync(filePath, file.buffer);
+
+    // Создаем запись в базе данных
+    const galleryItem = await this.prismaService.galleryItem.create({
       data: {
-        imageUrl: filePath,
-        fileType: file.mimetype.includes('video') ? 'VIDEO' : 'IMAGE',
+        imageUrl: `/uploads/${fileName}`,
+        fileType,
+        serviceId, // Связываем с сервисом если передан serviceId
       },
     });
 
-    return image;
+    return galleryItem;
   }
 
-  async remove(id: number) {
+  async saveMultipleFiles(
+    files: Express.Multer.File[],
+    fileType: EnumFileType,
+    serviceId?: number,
+  ) {
+    const galleryItems: GalleryItem[] = [];
+
+    for (const file of files) {
+      const item = await this.saveFile(file, fileType, serviceId);
+      galleryItems.push(item);
+    }
+
+    return galleryItems;
+  }
+
+  async deleteFile(id: number) {
     const galleryItem = await this.prismaService.galleryItem.findUnique({
       where: { id },
     });
 
-    if (!galleryItem) {
-      throw new NotFoundException('Фотография не найдена');
+    if (galleryItem) {
+      // Удаляем файл с диска
+      const filePath = path.join(process.cwd(), galleryItem.imageUrl);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      // Удаляем запись из базы
+      await this.prismaService.galleryItem.delete({
+        where: { id },
+      });
     }
+  }
 
-    // Удаляем файл из папки
-    this.fileService.deleteFile(galleryItem.imageUrl);
-
-    await this.prismaService.galleryItem.delete({
-      where: { id },
+  async deleteServiceGallery(serviceId: number) {
+    // Получаем все элементы галереи сервиса
+    const galleryItems = await this.prismaService.galleryItem.findMany({
+      where: { serviceId },
     });
 
-    return true;
+    // Удаляем файлы с диска
+    for (const item of galleryItems) {
+      const filePath = path.join(process.cwd(), item.imageUrl);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+
+    // Удаляем записи из базы
+    await this.prismaService.galleryItem.deleteMany({
+      where: { serviceId },
+    });
+  }
+
+  async updateFile(
+    oldId: number | null,
+    file: Express.Multer.File,
+    fileType: EnumFileType,
+  ) {
+    // Удаляем старый файл если существует
+    if (oldId) {
+      await this.deleteFile(oldId);
+    }
+
+    // Сохраняем новый файл
+    return await this.saveFile(file, fileType);
   }
 }

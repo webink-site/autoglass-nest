@@ -1,72 +1,81 @@
-import { Type } from 'class-transformer';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
-  ArrayNotEmpty,
-  IsArray,
-  IsEnum,
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
   IsString,
-  Min,
+  IsNotEmpty,
+  IsArray,
   ValidateNested,
+  ArrayMinSize,
 } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
+import { TransportType } from '@prisma/client';
 
-export enum TransportType {
-  SEDAN = 'SEDAN',
-  BUSINESS = 'BUSINESS',
-  SUV = 'SUV',
-  MINIBUS = 'MINIBUS',
-}
-
-class VariationDto {
+export class CreateVariationDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Название вариации обязательно' })
   name: string;
 
-  @IsInt()
-  @Min(0)
+  @Transform(({ value }) => parseInt(value))
+  @IsNotEmpty({ message: 'Цена обязательна' })
   price: number;
 }
 
-class ServicePriceDto {
-  @IsEnum(TransportType)
+export class CreateServicePriceDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Тип транспорта обязателен' })
   transportType: TransportType;
 
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => VariationDto)
-  @ArrayNotEmpty()
-  variations: VariationDto[];
+  @Type(() => CreateVariationDto)
+  @ArrayMinSize(1, { message: 'Должна быть хотя бы одна вариация' })
+  variations: CreateVariationDto[];
 }
 
-export class CreateServiceDto {
+// В create-service.dto.ts
+export class CreateServiceWithFilesDto {
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Название сервиса обязательно' })
   name: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Описание сервиса обязательно' })
   description: string;
 
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        return [value];
+      }
+    }
+    return Array.isArray(value) ? value : [value];
+  })
   @IsArray()
-  @ArrayNotEmpty()
   @IsString({ each: true })
   advantages: string[];
 
   @IsString()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Подробное описание обязательно' })
   longDescription: string;
 
-  @IsString()
-  @IsNotEmpty()
-  image: string;
-
-  @IsString()
-  @IsOptional()
-  video?: string;
-
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return Array.isArray(value) ? value : [];
+  })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => ServicePriceDto)
-  prices: ServicePriceDto[];
+  @Type(() => CreateServicePriceDto)
+  @ArrayMinSize(1, { message: 'Должна быть хотя бы одна цена' })
+  prices: CreateServicePriceDto[];
 }
