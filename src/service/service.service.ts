@@ -20,27 +20,27 @@ export class ServiceService {
     const services = await this.prismaService.service.findMany({
       include: {
         cardImage: true,
-        headerImage: true,
-        video: true,
-        galleryItems: true, // Добавляем галерею
-        prices: {
-          include: {
-            variations: true,
-          },
-        },
       },
     });
-    return services;
+    return services.map((i) => ({ ...i, cardImage: i.cardImage?.imageUrl }));
   }
 
   async findOne(id: number) {
-    return await this.prismaService.service.findUnique({
+    const service = await this.prismaService.service.findUnique({
       where: { id },
       include: {
         cardImage: true,
         headerImage: true,
-        video: true,
-        galleryItems: true, // Добавляем галерею
+        video: {
+          select: {
+            imageUrl: true,
+          },
+        },
+        galleryItems: {
+          select: {
+            imageUrl: true,
+          },
+        }, // Добавляем галерею
         prices: {
           include: {
             variations: true,
@@ -48,6 +48,16 @@ export class ServiceService {
         },
       },
     });
+
+    if (!service) {
+      throw new NotFoundException(`Service with ID ${id} not found`);
+    }
+
+    return {
+      ...service,
+      video: service.video?.imageUrl || null,
+      galleryItems: service.galleryItems.map((item) => item.imageUrl),
+    };
   }
 
   async create(
