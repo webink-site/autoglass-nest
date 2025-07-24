@@ -30,9 +30,17 @@ model Service {
   description     String
   advantages      String[]
   longDescription String         @map("long_description")
-  image           String
-  video           String?
   prices          ServicePrice[]
+
+  // Новые поля для связи с GalleryItem
+  cardImageId   Int? @map("card_image_id")
+  headerImageId Int? @map("header_image_id")
+  videoId       Int? @map("video_id")
+
+  // Связи с GalleryItem
+  cardImage   GalleryItem? @relation("ServiceCardImage", fields: [cardImageId], references: [id])
+  headerImage GalleryItem? @relation("ServiceHeaderImage", fields: [headerImageId], references: [id])
+  video       GalleryItem? @relation("ServiceVideo", fields: [videoId], references: [id])
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -87,6 +95,10 @@ model GalleryItem {
   id       Int          @id @default(autoincrement())
   imageUrl String
   fileType EnumFileType @default(IMAGE) @map("file_type")
+
+  serviceCardImages   Service[] @relation("ServiceCardImage")
+  serviceHeaderImages Service[] @relation("ServiceHeaderImage")
+  serviceVideos       Service[] @relation("ServiceVideo")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
