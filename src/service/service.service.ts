@@ -19,8 +19,8 @@ export class ServiceService {
       description,
       advantages,
       longDescription,
-      image,
-      video,
+      // image,
+      // video,
       prices,
     } = dto;
 
@@ -30,8 +30,8 @@ export class ServiceService {
         description,
         advantages,
         longDescription,
-        image,
-        video,
+        // image,
+        // video,
         prices: {
           create: prices.map((price) => ({
             transportType: price.transportType,
@@ -85,8 +85,8 @@ export class ServiceService {
         description: dto.description,
         advantages: dto.advantages,
         longDescription: dto.longDescription,
-        image: dto.image,
-        video: dto.video,
+        // image: dto.image,
+        // video: dto.video,
       },
     });
 

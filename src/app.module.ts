@@ -9,6 +9,7 @@ import { WrapModule } from './wrap/wrap.module';
 import { GalleryModule } from './gallery/gallery.module';
 import { FileModule } from './file/file.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { FormModule } from './form/form.module';
 import * as path from 'path';
 
 @Module({
@@ -26,6 +27,7 @@ import * as path from 'path';
       rootPath: path.join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
     }),
+    FormModule,
   ],
   controllers: [AppController],
   providers: [AppService],
