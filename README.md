@@ -1,98 +1,209 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🚗 Autoglass - Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS REST API для веб-сайта автостекла с админ-панелью и интеграцией с фронтендом на Nuxt.js.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Быстрый старт
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+### Локальная разработка
 
 ```bash
-$ npm install
+# Установка зависимостей
+npm install
+
+# Настройка базы данных
+docker compose up -d postgres
+npx prisma migrate dev
+npx prisma db seed
+
+# Запуск в режиме разработки
+npm run start:dev
 ```
 
-## Compile and run the project
+API будет доступен по адресу: http://localhost:3001
+
+### Production развертывание
+
+Полная инструкция по развертыванию в файле [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+Быстрый деплой:
+```bash
+# 1. Настройте VPS сервер
+./scripts/init-server.sh
+
+# 2. Настройте GitHub Secrets
+# 3. Push в main ветку - автоматический деплой через GitHub Actions
+```
+
+## 🏗️ Архитектура
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Nuxt.js       │───▶│   Nginx         │───▶│   NestJS API    │
+│   Frontend      │    │   Reverse Proxy │    │   (Port 3001)   │
+│                 │    │   SSL/HTTPS     │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                                         │
+                       ┌─────────────────┐              │
+                       │   Redis         │◀─────────────┤
+                       │   (Кеширование) │              │
+                       └─────────────────┘              │
+                                                         │
+                       ┌─────────────────┐              │
+                       │   PostgreSQL    │◀─────────────┘
+                       │   (База данных) │
+                       └─────────────────┘
+```
+
+## 📁 Структура проекта
+
+```
+autoglass-nest/
+├── src/                    # Исходный код
+│   ├── globals/           # Глобальные настройки
+│   ├── service/           # Модуль услуг
+│   ├── wrap/              # Модуль оклейки
+│   ├── gallery/           # Модуль галереи
+│   ├── file/              # Модуль файлов
+│   ├── form/              # Модуль форм
+│   └── prisma/            # Prisma ORM
+├── prisma/                # Схема и миграции БД
+├── scripts/               # Скрипты развертывания
+├── nginx/                 # Конфигурация Nginx
+├── .github/workflows/     # GitHub Actions CI/CD
+├── docker-compose.yml     # Dev окружение
+├── docker-compose.prod.yml # Production окружение
+├── Dockerfile            # Docker образ
+└── DEPLOYMENT.md         # Полная инструкция по деплою
+```
+
+## 🛠️ Основные команды
+
+### Разработка
+```bash
+npm run start:dev          # Запуск с hot reload
+npm run start:debug        # Запуск с debug
+npm run build              # Сборка
+npm run start:prod         # Запуск production
+```
+
+### База данных
+```bash
+npx prisma migrate dev     # Применить миграции
+npx prisma db seed         # Заполнить тестовыми данными
+npx prisma studio          # Веб-интерфейс БД
+npx prisma generate        # Сгенерировать клиент
+```
+
+### Тестирование
+```bash
+npm run test               # Unit тесты
+npm run test:e2e           # E2E тесты
+npm run test:cov           # Покрытие кода
+```
+
+### Docker
+```bash
+# Development
+docker compose up -d
+
+# Production
+docker compose -f docker-compose.prod.yml up -d
+```
+
+## 🔧 API Endpoints
+
+### Основные эндпоинты:
+- `GET /health` - Проверка состояния API
+- `GET /api/globals` - Глобальные настройки
+- `GET /api/services` - Список услуг
+- `GET /api/services/:id` - Детали услуги
+- `GET /api/wrap/elements` - Элементы оклейки
+- `GET /api/gallery` - Галерея изображений
+- `POST /api/files/upload` - Загрузка файлов
+
+### Документация API:
+API документация будет доступна по адресу `/api/docs` (Swagger) после запуска приложения.
+
+## 🌟 Основные функции
+
+### ✅ Реализовано:
+- REST API с валидацией данных
+- Загрузка и обработка изображений/видео
+- База данных PostgreSQL с Prisma ORM
+- Docker контейнеризация
+- CI/CD через GitHub Actions
+- Nginx reverse proxy с SSL
+- Health checks и мониторинг
+- Автоматическое резервное копирование
+
+### 🚧 В планах:
+- WebSocket для real-time уведомлений
+- Интеграция с Telegram Bot
+- Email уведомления
+- Админ-панель
+- Интеграция с CRM системами
+
+## 📊 Мониторинг
 
 ```bash
-# development
-$ npm run start
+# Статус сервисов
+./scripts/deploy.sh status
 
-# watch mode
-$ npm run start:dev
+# Логи API
+./scripts/deploy.sh logs api
 
-# production mode
-$ npm run start:prod
+# Логи Nginx
+./scripts/deploy.sh logs nginx
+
+# Системная статистика
+/usr/local/bin/server-stats.sh
 ```
 
-## Run tests
+## 🔐 Безопасность
+
+- JWT токены для аутентификации
+- Rate limiting на API и auth эндпоинты
+- CORS настройки
+- Валидация всех входных данных
+- Файрвол и Fail2Ban на сервере
+- SSL/TLS шифрование
+- Docker security best practices
+
+## 📝 Переменные окружения
+
+Скопируйте `.env.example` в `.env` и заполните значения:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cp .env.example .env
+nano .env
 ```
 
-## Deployment
+Основные переменные:
+- `DATABASE_URL` - Строка подключения к PostgreSQL
+- `JWT_SECRET` - Секретный ключ для JWT (мин. 32 символа)
+- `REDIS_PASSWORD` - Пароль Redis
+- `NODE_ENV` - Окружение (development/production)
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 🤝 Вклад в проект
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+1. Fork репозитория
+2. Создайте feature ветку (`git checkout -b feature/amazing-feature`)
+3. Commit изменений (`git commit -m 'Add amazing feature'`)
+4. Push в ветку (`git push origin feature/amazing-feature`)
+5. Откройте Pull Request
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+## 📄 Лицензия
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Этот проект использует лицензию MIT. Подробности в файле [LICENSE](LICENSE).
 
-## Resources
+## 📞 Поддержка
 
-Check out a few resources that may come in handy when working with NestJS:
+При возникновении проблем:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+1. Проверьте [DEPLOYMENT.md](./DEPLOYMENT.md) для детальных инструкций
+2. Изучите логи: `./scripts/deploy.sh logs`
+3. Создайте Issue в GitHub репозитории
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**Команда разработки Autoglass** ⭐
