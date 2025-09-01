@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Put } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put } from '@nestjs/common';
 import { GlobalsService } from './globals.service';
 import { UpdateGlobalDto } from './dto/update-globals.dto';
 
@@ -9,6 +9,11 @@ export class GlobalsController {
   @Get()
   getGlobalsData() {
     return this.globalsService.getGlobals();
+  }
+
+  @Post()
+  createGlobals(@Body() dto: UpdateGlobalDto) {
+    return this.globalsService.createGlobals(dto);
   }
 
   @Put()

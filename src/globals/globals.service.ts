@@ -5,22 +5,32 @@ import { UpdateGlobalDto } from './dto/update-globals.dto';
 
 @Injectable()
 export class GlobalsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prismaService: PrismaService) {}
 
   async getGlobals(): Promise<Globals | string> {
-    const globals = await this.prisma.globals.findFirst();
+    const globals = await this.prismaService.globals.findFirst();
     return globals ? globals : 'Ошибка';
   }
 
+  async createGlobals(dto: UpdateGlobalDto): Promise<Globals> {
+    const globals = await this.prismaService.globals.create({
+      data: {
+        ...dto,
+      },
+    });
+
+    return globals;
+  }
+
   async updateGlobals(data: UpdateGlobalDto): Promise<Globals> {
-    const current = await this.prisma.globals.findFirst();
+    const current = await this.prismaService.globals.findFirst();
     if (!current) {
-      return this.prisma.globals.create({
+      return this.prismaService.globals.create({
         data: data,
       });
     }
 
-    return this.prisma.globals.update({
+    return this.prismaService.globals.update({
       where: { id: current.id },
       data,
     });
