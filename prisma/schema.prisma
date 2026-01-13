@@ -121,6 +121,7 @@ enum EnumFileType {
 }
 
 enum TransportType {
+  ALL // Для всех типов
   SEDAN // Легковые
   BUSINESS // Бизнес-класс
   SUV // Джипы / Минивены
