@@ -11,8 +11,14 @@ async function bootstrap() {
       'http://localhost:3000',
       'http://localhost:3001',
       'http://localhost:5173',
+      'https://glassgtn.ru',
+      'https://www.glassgtn.ru',
+      'https://new.glassgtn.ru',
+      'https://api.glassgtn.ru',
     ],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
   await app.listen(3001);
 }
