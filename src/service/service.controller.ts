@@ -39,7 +39,7 @@ export class ServiceController {
       ],
       {
         limits: {
-          fileSize: 50 * 1024 * 1024, // 50MB
+          fileSize: 200 * 1024 * 1024, // 200MB
         },
         fileFilter: (req, file, cb) => {
           if (file.fieldname === 'video') {
@@ -86,7 +86,7 @@ export class ServiceController {
       ],
       {
         limits: {
-          fileSize: 50 * 1024 * 1024, // 50MB
+          fileSize: 200 * 1024 * 1024, // 200MB
         },
         fileFilter: (req, file, cb) => {
           if (file.fieldname === 'video') {
