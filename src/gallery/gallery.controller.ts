@@ -1,8 +1,11 @@
 import {
   Controller,
+  Get,
+  Query,
+  ParseIntPipe,
+  DefaultValuePipe,
   //   Delete,
   //   FileTypeValidator,
-  //   Get,
   //   MaxFileSizeValidator,
   //   Param,
   //   ParseFilePipe,
@@ -17,10 +20,13 @@ import { GalleryService } from './gallery.service';
 export class GalleryController {
   constructor(private readonly galleryService: GalleryService) {}
 
-  // @Get()
-  // async findAll() {
-  //   return this.galleryService.findAll();
-  // }
+  @Get()
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    return await this.galleryService.findAll(page, limit);
+  }
 
   // @UseInterceptors(FileInterceptor('file'))
   // @Post('upload')

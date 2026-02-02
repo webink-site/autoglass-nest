@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { EnumFileType, GalleryItem } from '@prisma/client';
@@ -106,5 +104,37 @@ export class GalleryService {
 
     // Сохраняем новый файл
     return await this.saveFile(file, fileType);
+  }
+
+  async findAll(page: number = 1, limit: number = 20) {
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prismaService.galleryItem.findMany({
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc',
+        },
+        select: {
+          id: true,
+          imageUrl: true,
+          fileType: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      this.prismaService.galleryItem.count(),
+    ]);
+
+    return {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }
