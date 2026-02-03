@@ -39,7 +39,8 @@ COPY --from=dependencies /app/prisma ./prisma
 COPY --from=build /app/dist ./dist
 COPY package*.json ./
 
-# Install ts-node and typescript for running migration scripts (before switching user)
+# Install ts-node and typescript for development (before switching user)
+# Note: Only needed if you want to run seed manually in production
 RUN npm install ts-node typescript --save-dev
 
 # Create uploads directory

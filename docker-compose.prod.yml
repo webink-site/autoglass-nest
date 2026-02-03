@@ -52,8 +52,6 @@ services:
     command: >
       sh -c "
         npx prisma migrate deploy &&
-        npx prisma db seed &&
-        npx ts-node prisma/scripts/fill-slugs.ts || true &&
         npm run start:prod
       "
 
