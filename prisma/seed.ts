@@ -1,6 +1,53 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { PrismaClient, TransportType } from '@prisma/client';
 
 const prisma = new PrismaClient();
+
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[а-яё]/g, (char) => {
+      const map: Record<string, string> = {
+        а: 'a',
+        б: 'b',
+        в: 'v',
+        г: 'g',
+        д: 'd',
+        е: 'e',
+        ё: 'e',
+        ж: 'zh',
+        з: 'z',
+        и: 'i',
+        й: 'y',
+        к: 'k',
+        л: 'l',
+        м: 'm',
+        н: 'n',
+        о: 'o',
+        п: 'p',
+        р: 'r',
+        с: 's',
+        т: 't',
+        у: 'u',
+        ф: 'f',
+        х: 'h',
+        ц: 'ts',
+        ч: 'ch',
+        ш: 'sh',
+        щ: 'sch',
+        ъ: '',
+        ы: 'y',
+        ь: '',
+        э: 'e',
+        ю: 'yu',
+        я: 'ya',
+      };
+      return map[char] || char;
+    })
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 async function main() {
   console.log('🌱 Starting seed...');
@@ -28,9 +75,10 @@ async function main() {
 
   // Химчистка
   console.log('🚗 Creating service: Химчистка...');
-  const chemCleaningService = await prisma.service.create({
+  await prisma.service.create({
     data: {
       name: 'Химчистка',
+      slug: generateSlug('Химчистка'),
       description: 'Профессиональная химчистка салона автомобиля',
       advantages: [
         'Глубокая очистка салона',
@@ -71,6 +119,7 @@ async function main() {
   await prisma.service.create({
     data: {
       name: 'Полная химчистка',
+      slug: generateSlug('Полная химчистка'),
       description: 'Комплексная химчистка всего салона',
       advantages: [
         'Весь салон',
@@ -108,7 +157,7 @@ async function main() {
           },
         ],
       },
-    },
+    } as any,
   });
 
   // ПОЛИРОВКА
@@ -116,6 +165,7 @@ async function main() {
   await prisma.service.create({
     data: {
       name: 'Полировка',
+      slug: generateSlug('Полировка'),
       description: 'Локальная и полная полировка кузова',
       advantages: [
         'Восстановление блеска',
@@ -156,14 +206,12 @@ async function main() {
           {
             transportType: TransportType.SUV,
             variations: {
-              create: [
-                { name: 'Полная полировка Внедорожник', price: 35000 },
-              ],
+              create: [{ name: 'Полная полировка Внедорожник', price: 35000 }],
             },
           },
         ],
       },
-    },
+    } as any,
   });
 
   // ШУМОИЗОЛЯЦИЯ
@@ -171,6 +219,7 @@ async function main() {
   await prisma.service.create({
     data: {
       name: 'Шумоизоляция',
+      slug: generateSlug('Шумоизоляция'),
       description: 'Комплексная шумоизоляция автомобиля',
       advantages: [
         'Снижение шума',
@@ -198,7 +247,7 @@ async function main() {
           },
         ],
       },
-    },
+    } as any,
   });
 
   // СТЁКЛА
@@ -206,6 +255,7 @@ async function main() {
   await prisma.service.create({
     data: {
       name: 'Стёкла',
+      slug: generateSlug('Стёкла'),
       description: 'Замена, ремонт и полировка автостёкол',
       advantages: [
         'Оригинальные стёкла',
@@ -240,7 +290,7 @@ async function main() {
           },
         ],
       },
-    },
+    } as any,
   });
 
   // ОКЛЕЙКА
@@ -248,6 +298,7 @@ async function main() {
   await prisma.service.create({
     data: {
       name: 'Оклейка',
+      slug: generateSlug('Оклейка'),
       description: 'Оклейка элементов кузова защитной плёнкой',
       advantages: [
         'Защита ЛКП',
@@ -281,7 +332,7 @@ async function main() {
           },
         ],
       },
-    },
+    } as any,
   });
 
   // ТОНИРОВКА
@@ -289,6 +340,7 @@ async function main() {
   await prisma.service.create({
     data: {
       name: 'Тонировка',
+      slug: generateSlug('Тонировка'),
       description: 'Тонировка стёкол автомобиля',
       advantages: [
         'Защита от солнца',
@@ -308,8 +360,14 @@ async function main() {
                   name: 'Заднее стекло хетчбек/кроссовер/универсал',
                   price: 3000,
                 },
-                { name: 'Заднее стекло седан/лифтбек/внедорожник', price: 3500 },
-                { name: 'Хетчбек/купе/седан без форточек (3 стекла)', price: 6000 },
+                {
+                  name: 'Заднее стекло седан/лифтбек/внедорожник',
+                  price: 3500,
+                },
+                {
+                  name: 'Хетчбек/купе/седан без форточек (3 стекла)',
+                  price: 6000,
+                },
                 { name: 'Седан с форточками (5 стёкол)', price: 6500 },
               ],
             },
@@ -349,7 +407,7 @@ async function main() {
           },
         ],
       },
-    },
+    } as any,
   });
 
   // ОПТИКА
@@ -357,6 +415,7 @@ async function main() {
   await prisma.service.create({
     data: {
       name: 'Оптика',
+      slug: generateSlug('Оптика'),
       description: 'Регулировка и ремонт оптики',
       advantages: [
         'Точная настройка',

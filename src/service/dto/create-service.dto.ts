@@ -5,6 +5,7 @@ import {
   IsString,
   IsNotEmpty,
   IsArray,
+  IsOptional,
   ValidateNested,
   ArrayMinSize,
 } from 'class-validator';
