@@ -32,6 +32,10 @@ export class UpdateServiceWithFilesDto {
 
   @IsString()
   @IsOptional()
+  slug?: string;
+
+  @IsString()
+  @IsOptional()
   description?: string;
 
   @Transform(({ value }) => {

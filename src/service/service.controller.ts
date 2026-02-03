@@ -23,9 +23,9 @@ export class ServiceController {
     return this.serviceService.findAll();
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.serviceService.findOne(+id);
+  @Get(':idOrSlug')
+  async findOne(@Param('idOrSlug') idOrSlug: string) {
+    return this.serviceService.findOne(idOrSlug);
   }
 
   @Post()
@@ -75,7 +75,7 @@ export class ServiceController {
     return this.serviceService.create(dto, files);
   }
 
-  @Patch(':id')
+  @Patch(':idOrSlug')
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -110,7 +110,7 @@ export class ServiceController {
     ),
   )
   async update(
-    @Param('id') id: string,
+    @Param('idOrSlug') idOrSlug: string,
     @Body() dto: UpdateServiceWithFilesDto,
     @UploadedFiles()
     files: {
@@ -120,11 +120,11 @@ export class ServiceController {
       gallery?: Express.Multer.File[];
     },
   ) {
-    return this.serviceService.update(+id, dto, files);
+    return this.serviceService.update(idOrSlug, dto, files);
   }
 
-  @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.serviceService.delete(+id);
+  @Delete(':idOrSlug')
+  async delete(@Param('idOrSlug') idOrSlug: string) {
+    return this.serviceService.delete(idOrSlug);
   }
 }

@@ -40,6 +40,10 @@ export class CreateServiceWithFilesDto {
   name: string;
 
   @IsString()
+  @IsOptional()
+  slug?: string;
+
+  @IsString()
   @IsNotEmpty({ message: 'Описание сервиса обязательно' })
   description: string;
 

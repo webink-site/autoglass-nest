@@ -27,6 +27,7 @@ model Globals {
 model Service {
   id              Int      @id @default(autoincrement())
   name            String
+  slug            String   @unique
   description     String
   advantages      String[]
   longDescription String   @map("long_description")

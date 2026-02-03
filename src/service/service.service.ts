@@ -16,6 +16,52 @@ export class ServiceService {
     private galleryService: GalleryService,
   ) {}
 
+  private generateSlug(name: string): string {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[а-яё]/g, (char) => {
+        const map: Record<string, string> = {
+          а: 'a',
+          б: 'b',
+          в: 'v',
+          г: 'g',
+          д: 'd',
+          е: 'e',
+          ё: 'e',
+          ж: 'zh',
+          з: 'z',
+          и: 'i',
+          й: 'y',
+          к: 'k',
+          л: 'l',
+          м: 'm',
+          н: 'n',
+          о: 'o',
+          п: 'p',
+          р: 'r',
+          с: 's',
+          т: 't',
+          у: 'u',
+          ф: 'f',
+          х: 'h',
+          ц: 'ts',
+          ч: 'ch',
+          ш: 'sh',
+          щ: 'sch',
+          ъ: '',
+          ы: 'y',
+          ь: '',
+          э: 'e',
+          ю: 'yu',
+          я: 'ya',
+        };
+        return map[char] || char;
+      })
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
   async findAll(): Promise<Service[]> {
     const services = await this.prismaService.service.findMany({
       include: {
@@ -25,9 +71,14 @@ export class ServiceService {
     return services.map((i) => ({ ...i, cardImage: i.cardImage?.imageUrl }));
   }
 
-  async findOne(id: number) {
+  async findOne(idOrSlug: number | string) {
+    const isNumeric = !isNaN(Number(idOrSlug));
+    const where = isNumeric
+      ? ({ id: Number(idOrSlug) } as { id: number })
+      : ({ slug: idOrSlug as string } as { slug: string });
+
     const service = await this.prismaService.service.findUnique({
-      where: { id },
+      where: where as any,
       include: {
         cardImage: true,
         headerImage: true,
@@ -50,13 +101,17 @@ export class ServiceService {
     });
 
     if (!service) {
-      throw new NotFoundException(`Service with ID ${id} not found`);
+      throw new NotFoundException(
+        `Service with ${isNumeric ? 'ID' : 'slug'} ${idOrSlug} not found`,
+      );
     }
 
     return {
       ...service,
-      video: service.video?.imageUrl || null,
-      galleryItems: service.galleryItems.map((item) => item.imageUrl),
+      video: (service as any).video?.imageUrl || null,
+      galleryItems: ((service as any).galleryItems || []).map(
+        (item: any) => item.imageUrl,
+      ),
     };
   }
 
@@ -69,7 +124,8 @@ export class ServiceService {
       gallery?: Express.Multer.File[];
     },
   ) {
-    const { name, description, advantages, longDescription, prices } = dto;
+    const { name, description, advantages, longDescription, prices, slug } =
+      dto;
 
     // Простая проверка и парсинг для prices
     const pricesArray = Array.isArray(prices)
@@ -81,10 +137,26 @@ export class ServiceService {
       ? advantages
       : JSON.parse(advantages as string);
 
+    // Генерируем slug если не передан
+    const baseSlug = slug || this.generateSlug(name);
+
+    // Проверяем уникальность slug
+    let counter = 1;
+    let uniqueSlug = baseSlug;
+    while (
+      await this.prismaService.service.findUnique({
+        where: { slug: uniqueSlug } as { slug: string },
+      })
+    ) {
+      uniqueSlug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
     // Создаем сервис сначала
     const service = await this.prismaService.service.create({
       data: {
         name,
+        slug: uniqueSlug,
         description,
         advantages: advantagesArray, // Используем распарсенный массив
         longDescription,
@@ -99,7 +171,7 @@ export class ServiceService {
             },
           })),
         },
-      },
+      } as any,
     });
 
     // Остальной код без изменений...
@@ -163,7 +235,7 @@ export class ServiceService {
   }
 
   async update(
-    id: number,
+    idOrSlug: number | string,
     dto: UpdateServiceWithFilesDto,
     files: {
       cardImage?: Express.Multer.File[];
@@ -172,14 +244,23 @@ export class ServiceService {
       gallery?: Express.Multer.File[];
     },
   ) {
+    const isNumeric = !isNaN(Number(idOrSlug));
+    const where = isNumeric
+      ? ({ id: Number(idOrSlug) } as { id: number })
+      : ({ slug: idOrSlug as string } as { slug: string });
+
     const existing = await this.prismaService.service.findUnique({
-      where: { id },
+      where: where as any,
       include: { prices: { include: { variations: true } } },
     });
 
     if (!existing) {
-      throw new NotFoundException(`Service with ID ${id} not found`);
+      throw new NotFoundException(
+        `Service with ${isNumeric ? 'ID' : 'slug'} ${idOrSlug} not found`,
+      );
     }
+
+    const id = existing.id;
 
     // Парсим advantages и prices если они переданы
     let advantagesArray;
@@ -256,18 +337,70 @@ export class ServiceService {
       });
     }
 
+    // Обрабатываем slug если передан
+    let finalSlug = dto.slug;
+    if (dto.slug) {
+      // Проверяем уникальность slug (исключая текущий сервис)
+      let counter = 1;
+      let uniqueSlug = dto.slug;
+      while (
+        await this.prismaService.service.findFirst({
+          where: {
+            slug: uniqueSlug,
+            id: { not: id },
+          } as any,
+        })
+      ) {
+        uniqueSlug = `${dto.slug}-${counter}`;
+        counter++;
+      }
+      finalSlug = uniqueSlug;
+    } else if (dto.name && dto.name !== existing.name) {
+      // Генерируем slug если изменилось имя
+      const baseSlug = this.generateSlug(dto.name);
+      let counter = 1;
+      let uniqueSlug = baseSlug;
+      while (
+        await this.prismaService.service.findFirst({
+          where: {
+            slug: uniqueSlug,
+            id: { not: id },
+          } as any,
+        })
+      ) {
+        uniqueSlug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+      finalSlug = uniqueSlug;
+    }
+
     // Обновляем услугу
+    const updateData: {
+      name?: string;
+      slug?: string;
+      description?: string;
+      advantages?: string[];
+      longDescription?: string;
+      cardImageId?: number | null;
+      headerImageId?: number | null;
+      videoId?: number | null;
+    } = {
+      name: dto.name,
+      description: dto.description,
+      advantages: advantagesArray,
+      longDescription: dto.longDescription,
+      cardImageId,
+      headerImageId,
+      videoId,
+    };
+
+    if (finalSlug) {
+      updateData.slug = finalSlug;
+    }
+
     await this.prismaService.service.update({
       where: { id },
-      data: {
-        name: dto.name,
-        description: dto.description,
-        advantages: advantagesArray, // Используем распарсенный массив
-        longDescription: dto.longDescription,
-        cardImageId,
-        headerImageId,
-        videoId,
-      },
+      data: updateData,
     });
 
     // Добавляем новые prices и variations если они переданы
@@ -320,14 +453,23 @@ export class ServiceService {
     });
   }
 
-  async delete(id: number) {
+  async delete(idOrSlug: number | string) {
+    const isNumeric = !isNaN(Number(idOrSlug));
+    const where = isNumeric
+      ? ({ id: Number(idOrSlug) } as { id: number })
+      : ({ slug: idOrSlug as string } as { slug: string });
+
     const existing = await this.prismaService.service.findUnique({
-      where: { id },
+      where: where as any,
     });
 
     if (!existing) {
-      throw new NotFoundException(`Service with ID ${id} not found`);
+      throw new NotFoundException(
+        `Service with ${isNumeric ? 'ID' : 'slug'} ${idOrSlug} not found`,
+      );
     }
+
+    const id = existing.id;
 
     // Удаляем связанные файлы
     if (existing.cardImageId) {

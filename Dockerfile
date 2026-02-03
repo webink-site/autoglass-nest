@@ -39,6 +39,9 @@ COPY --from=dependencies /app/prisma ./prisma
 COPY --from=build /app/dist ./dist
 COPY package*.json ./
 
+# Install ts-node and typescript for running migration scripts (before switching user)
+RUN npm install ts-node typescript --save-dev
+
 # Create uploads directory
 RUN mkdir -p uploads && chown -R nestjs:nodejs uploads
 
