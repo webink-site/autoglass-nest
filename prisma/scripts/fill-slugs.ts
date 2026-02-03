@@ -75,15 +75,22 @@ async function fillSlugs() {
       counter++;
     }
 
-    // Обновляем slug
-    await prisma.service.update({
-      where: { id: service.id },
-      data: { slug: uniqueSlug },
-    });
+    // Обновляем slug только если он отличается (включая временные "service-*")
+    const currentSlug = service.slug || '';
+    if (currentSlug !== uniqueSlug || currentSlug.startsWith('service-')) {
+      await prisma.service.update({
+        where: { id: service.id },
+        data: { slug: uniqueSlug },
+      });
 
-    console.log(
-      `✓ Updated service "${service.name}" (ID: ${service.id}) with slug "${uniqueSlug}"`,
-    );
+      console.log(
+        `✓ Updated service "${service.name}" (ID: ${service.id}) from "${currentSlug}" to "${uniqueSlug}"`,
+      );
+    } else {
+      console.log(
+        `→ Service "${service.name}" (ID: ${service.id}) already has correct slug "${uniqueSlug}"`,
+      );
+    }
   }
 
   console.log('\n✅ All slugs filled successfully!');
